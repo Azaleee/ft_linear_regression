@@ -14,6 +14,9 @@ public class DataNormalizer
         MinPrice = data.Min(c => c.price);
         MaxPrice = data.Max(c => c.price);
 
+        var dx = MaxKm - MinKm;  if (dx == 0) throw new InvalidOperationException("All km are equal.");
+        var dy = MaxPrice - MinPrice; if (dy == 0) throw new InvalidOperationException("All prices are equal.");
+
         foreach (var car in data)
         {
             car.km = (car.km - MinKm) / (MaxKm - MinKm);
