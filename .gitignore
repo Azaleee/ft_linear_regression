@@ -1,0 +1,45 @@
+# ======================================
+#  C# Linear Regression Project (.NET)
+# ======================================
+
+# --- Build / Bin / Obj ---
+bin/
+obj/
+build/
+artifacts/
+
+# --- Logs & Temp files ---
+*.log
+*.tmp
+*.bak
+*.old
+*.orig
+*.swp
+*.DS_Store
+Thumbs.db
+
+# --- NuGet / Dependencies ---
+packages/
+*.nupkg
+*.snupkg
+.nuget/
+project.lock.json
+artifacts/
+
+# --- Environment / Config ---
+.env
+*.config.local
+*.json.backup
+
+# --- Data & Generated Artifacts ---
+data/*.csv
+artifacts/*.csv
+artifacts/*.png
+artifacts/*.html
+artifacts/*.txt
+artifacts/*.json
+
+# --- OS-specific files ---
+ehthumbs.db
+Icon?
+Desktop.ini
