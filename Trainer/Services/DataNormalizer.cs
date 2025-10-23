@@ -25,6 +25,12 @@ public class DataNormalizer
         MinTarget = data.Min(s => s.Target);
         MaxTarget = data.Max(s => s.Target);
 
+        if (MaxFeature - MinFeature == 0)
+            throw new InvalidOperationException("All feature values are identical. Cannot normalize.");
+        
+        if (MaxTarget - MinTarget == 0)
+            throw new InvalidOperationException("All target values are identical. Cannot normalize.");
+
         var normalizedData = data.Select(sample => new Sample
         {
             Feature = (sample.Feature - MinFeature) / (MaxFeature - MinFeature),
