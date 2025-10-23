@@ -22,9 +22,17 @@ public static class DataLoader
         var fullPath = Path.GetFullPath(config.FilePath);
         IsFileValid(fullPath);
 
-        var (cfg, culture) = CsvSetup(fullPath);
-
         using var reader = new StreamReader(fullPath);
+        
+        var firstLine = reader.ReadLine();
+        if (string.IsNullOrWhiteSpace(firstLine))
+            throw new InvalidDataException("CSV has no header.");
+
+        var (cfg, culture) = CsvSetup(firstLine);
+
+        reader.BaseStream.Position = 0;
+        reader.DiscardBufferedData();
+
         using var csv = new CsvReader(reader, cfg);
 
         csv.Read();
@@ -71,11 +79,9 @@ public static class DataLoader
             throw new InvalidDataException("CSV file is too large.");
     }
 
-    private static (CsvConfiguration, CultureInfo) CsvSetup(string fullPath)
+    private static (CsvConfiguration, CultureInfo) CsvSetup(string firstLine)
     {
-        var first = File.ReadLines(fullPath).First();
-        var delim = first.Contains(';') ? ";" : (first.Contains('\t') ? "\t" : ",");
-
+        var delim = firstLine.Contains(';') ? ";" : (firstLine.Contains('\t') ? "\t" : ",");
         var culture = delim == ";" ? new CultureInfo("fr-FR") : CultureInfo.InvariantCulture;
         
         var cfg = new CsvConfiguration(culture)
