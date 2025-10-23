@@ -9,19 +9,21 @@ This project demonstrates how to train and use a linear regression model from sc
 
 ---
 
-## 📊 Project Structure
+## Project Structure
+
 ft_linear_regression/
-├── data.csv # Training dataset
-├── house.csv # Example dataset
-├── model.txt # Saved model parameters
-├── regression_plot.png # Visualization of results
-├── Trainer/ # Model training logic
-│ ├── Configuration/ # Config & graph settings
-│ ├── Models/ # Data model definitions
-│ ├── Services/ # Data loader, normalizer, trainer
-│ └── Utils/ # Model saver
-├── Predictor/ # CLI tool for prediction
-└── LinearRegression.sln # Solution file
+├── data.csv                 # Training dataset
+├── house.csv                # Example dataset
+├── model.txt                # Saved model parameters
+├── regression_plot.png      # Visualization of results
+├── Trainer/                 # Model training logic
+│   ├── Configuration/       # Config and graph settings
+│   ├── Models/              # Data model definitions
+│   ├── Services/            # Data loader, normalizer, and trainer
+│   └── Utils/               # Model saver
+├── Predictor/               # CLI tool for prediction
+└── LinearRegression.sln     # Solution file
+
 
 ---
 
