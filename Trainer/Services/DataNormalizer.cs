@@ -1,33 +1,36 @@
+using Trainer.Models;
+
 namespace Trainer.Services;
 
-public class DataNormalizer
+public class DataNormalizer<T> where T : ITrainableData
 {
-    public double MinKm { get; private set; }
-    public double MaxKm { get; private set; }
-    public double MinPrice { get; private set; }
-    public double MaxPrice { get; private set; }
+    public double MinFeature { get; private set; }
+    public double MaxFeature { get; private set; }
+    public double MinTarget { get; private set; }
+    public double MaxTarget { get; private set; }
 
-    public void Normalize(List<CarData> data)
+    public void Normalize(List<T> data)
     {
-        MinKm = data.Min(c => c.km);
-        MaxKm = data.Max(c => c.km);
-        MinPrice = data.Min(c => c.price);
-        MaxPrice = data.Max(c => c.price);
+        MinFeature = data.Min(c => c.GetFeature());
+        MaxFeature = data.Max(c => c.GetFeature());
+        MinTarget = data.Min(c => c.GetTarget());
+        MaxTarget = data.Max(c => c.GetTarget());
 
-        var dx = MaxKm - MinKm;  if (dx == 0) throw new InvalidOperationException("All km are equal.");
-        var dy = MaxPrice - MinPrice; if (dy == 0) throw new InvalidOperationException("All prices are equal.");
 
-        foreach (var car in data)
+        foreach (var item in data)
         {
-            car.km = (car.km - MinKm) / (MaxKm - MinKm);
-            car.price = (car.price - MinPrice) / (MaxPrice - MinPrice);
+            double normFeature = (item.GetFeature() - MinFeature) / (MaxFeature - MinFeature);
+            double normTarget = (item.GetTarget() - MinTarget) / (MaxTarget - MinTarget);
+            
+            item.SetFeature(normFeature);
+            item.SetTarget(normTarget);
         }
     }
 
     public (double theta0, double theta1) Denormalize(double theta0Norm, double theta1Norm)
     {
-        double theta1Original = theta1Norm * (MaxPrice - MinPrice) / (MaxKm - MinKm);
-        double theta0Original = MinPrice + theta0Norm * (MaxPrice - MinPrice) - theta1Original * MinKm;
+        double theta1Original = theta1Norm * (MaxTarget - MinTarget) / (MaxFeature - MinFeature);
+        double theta0Original = MinTarget + theta0Norm * (MaxTarget - MinTarget) - theta1Original * MinFeature;
         return (theta0Original, theta1Original);
     }
 }

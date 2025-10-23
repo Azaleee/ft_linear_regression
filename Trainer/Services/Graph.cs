@@ -1,30 +1,30 @@
 using ScottPlot;
+using Trainer.Models;
 
 namespace Trainer.Services;
 
-public class Graph
+public static class Graph
 {
-
-    public static void PlotResults(List<CarData> originalData, double theta0Original, double theta1Original, double? userKm = null)
+    public static void PlotResults<T>(List<T> originalData, double theta0Original, double theta1Original, double? userFeatureData = null) where T : ITrainableData
     {
         var plt = new Plot();
         
-        double[] kms = originalData.Select(c => c.km).ToArray();
-        double[] prices = originalData.Select(c => c.price).ToArray();
+        double[] feature = originalData.Select(c => c.GetFeature()).ToArray();
+        double[] target = originalData.Select(c => c.GetTarget()).ToArray();
         
-        var scatter = plt.Add.Scatter(kms, prices);
+        var scatter = plt.Add.Scatter(feature, target);
         scatter.LegendText = "Data Points";
         scatter.MarkerSize = 10;
         scatter.MarkerShape = MarkerShape.FilledCircle;
         scatter.Color = Colors.Blue;
         scatter.LineWidth = 0;
         
-        double minKm = 0;
-        double maxKm = kms.Max() * 1.1;
-        double[] lineX = { minKm, maxKm };
+        double minFeature = 0;
+        double maxTarget = feature.Max() * 1.1;
+        double[] lineX = { minFeature, maxTarget };
         double[] lineY = { 
-            theta0Original + theta1Original * minKm,
-            theta0Original + theta1Original * maxKm
+            theta0Original + theta1Original * minFeature,
+            theta0Original + theta1Original * maxTarget
         };
         
         var line = plt.Add.Line(lineX[0], lineY[0], lineX[1], lineY[1]);
@@ -32,10 +32,10 @@ public class Graph
         line.LineWidth = 2;
         line.Color = Colors.Red;
         
-        if (userKm.HasValue)
+        if (userFeatureData.HasValue)
         {
-            double userPrice = theta0Original + theta1Original * userKm.Value;
-            var userPoint = plt.Add.Marker(userKm.Value, userPrice);
+            double userTarget = theta0Original + theta1Original * userFeatureData.Value;
+            var userPoint = plt.Add.Marker(userFeatureData.Value, userTarget);
             userPoint.MarkerSize = 15;
             userPoint.MarkerShape = MarkerShape.FilledCircle;
             userPoint.Color = Colors.Green;

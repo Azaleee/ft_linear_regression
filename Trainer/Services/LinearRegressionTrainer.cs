@@ -1,6 +1,8 @@
+using Trainer.Models;
+
 namespace Trainer.Services;
 
-public class LinearRegressionTrainer
+public class LinearRegressionTrainer<T> where T : ITrainableData
 {
     private double _theta0;
     private double _theta1;
@@ -18,7 +20,7 @@ public class LinearRegressionTrainer
         _theta1 = 0;
     }
 
-    public void Train(List<CarData> data)
+    public void Train(List<T> data)
     {
         int m = data.Count;
 
@@ -27,12 +29,15 @@ public class LinearRegressionTrainer
             double sumErrors = 0;
             double sumErrorsWeighted = 0;
 
-            foreach (var car in data)
+            foreach (var item in data)
             {
-                double prediction = _theta0 + (_theta1 * car.km);
-                double error = prediction - car.price;
+                double feature = item.GetFeature();
+                double target = item.GetTarget();
+
+                double prediction = _theta0 + (_theta1 * feature);
+                double error = prediction - target;
                 sumErrors += error;
-                sumErrorsWeighted += error * car.km;
+                sumErrorsWeighted += error * feature;
             }
 
             double tmpTheta0 = _learningRate * (sumErrors / m);
@@ -40,11 +45,6 @@ public class LinearRegressionTrainer
 
             _theta0 = _theta0 - tmpTheta0;
             _theta1 = _theta1 - tmpTheta1;
-
-            if (iteration % 100 == 0)
-            {
-                Console.WriteLine($"Iteration {iteration}: θ0={_theta0:F6}, θ1={_theta1:F6}");
-            }
         }
     }
 }
