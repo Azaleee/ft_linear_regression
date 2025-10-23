@@ -11,6 +11,7 @@ This project demonstrates how to train and use a linear regression model from sc
 
 ## Project Structure
 
+```
 ft_linear_regression/
 ├── data.csv                 # Training dataset
 ├── house.csv                # Example dataset
@@ -23,7 +24,7 @@ ft_linear_regression/
 │   └── Utils/               # Model saver
 ├── Predictor/               # CLI tool for prediction
 └── LinearRegression.sln     # Solution file
-
+```
 
 ---
 
