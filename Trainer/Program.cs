@@ -19,12 +19,14 @@ class Program
     {
         Console.WriteLine("=== Linear Regression Trainer ===\n");
 
-        var config = ConfigFactory.FromCliOptions(options);
+        var dataConfig = ConfigFactory.FromCliOptions(options);
+        var trainingConfig = ConfigFactory.CreateTrainingConfig(options);
+        var graphConfig = ConfigFactory.CreateGraphConfig(options);
 
         var data = new List<Sample>();
         try
         {
-            data = DataLoader.LoadFromCsv(config);
+            data = DataLoader.LoadFromCsv(dataConfig);
         }
         catch (Exception e)
         {
@@ -35,6 +37,37 @@ class Program
 
         Console.WriteLine($"{data.Count} items loaded\n");
         Console.WriteLine($"Original data: {string.Join(", ", data.Take(5).Select(d => $"({d.Feature}, {d.Target})"))} ...\n");
+        
+        var normalizer = new DataNormalizer();
+        var normalizedData = new List<Sample>();
+        try
+        {
+            normalizedData = normalizer.Normalize(data);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine($"Error: {e.Message}");
+        }
+        Console.WriteLine("Normalized data\n");
+
+        Console.WriteLine("Training in progress ...\n");
+        var trainer = new LinearRegressionTrainer(trainingConfig);
+        trainer.Train(normalizedData);
+
+        var (theta0, theta1) = normalizer.Denormalize(trainer.Theta0, trainer.Theta1);
+
+        Console.WriteLine($"\nTraining done. Model parameters:");
+        Console.WriteLine($"θ0 = {theta0:F6}");
+        Console.WriteLine($"θ1 = {theta1:F6}\n");
+
+        ModelSaver.Save(options.ModelPath, theta0, theta1);
+        Console.WriteLine($"Model saved to {Path.GetFullPath(options.ModelPath)}\n");
+
+        if (options.GeneratePlot)
+        {
+            Graph.Generate(data, theta0, theta1, graphConfig, options.PlotPath);
+            Console.WriteLine($"Plot saved to {Path.GetFullPath(options.PlotPath)}\n");
+        }
     }
 
     private static void HandleErrors(IEnumerable<Error> enumerable)
@@ -43,31 +76,3 @@ class Program
         Environment.Exit(1);
     }
 }
-
-
-// var normalizer = new DataNormalizer<HouseData>();
-// try
-// {
-//     normalizer.Normalize(data);
-// }
-// catch (Exception e)
-// {
-//     Console.WriteLine($"Error: {e.Message}");
-// }
-// finally
-// {
-//     Console.WriteLine("Normalized data\n");
-// }
-//
-// Console.WriteLine("Training in progress ...\n");
-// var trainer = new LinearRegressionTrainer<HouseData>(learningRate: 0.1, iterations: 1000000);
-// trainer.Train(data);
-//
-// var (theta0, theta1) = normalizer.Denormalize(trainer.Theta0, trainer.Theta1);
-//
-//
-// Graph.PlotResults(originalData, theta0, theta1, userFeatureData: 280);
-//
-// Console.WriteLine("\nTraining done\n");
-//
-// ModelSaver.Save("../model.txt", theta0, theta1);

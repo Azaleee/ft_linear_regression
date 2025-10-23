@@ -2,35 +2,46 @@ using Trainer.Models;
 
 namespace Trainer.Services;
 
-public class DataNormalizer<T> where T : ITrainableData
+/// <summary>
+/// Normalizes data to improve training convergence
+/// </summary>
+public class DataNormalizer
 {
     public double MinFeature { get; private set; }
     public double MaxFeature { get; private set; }
     public double MinTarget { get; private set; }
     public double MaxTarget { get; private set; }
 
-    public void Normalize(List<T> data)
+    /// <summary>
+    /// Normalizes all samples to [0, 1] range
+    /// </summary>
+    public List<Sample> Normalize(List<Sample> data)
     {
-        MinFeature = data.Min(c => c.GetFeature());
-        MaxFeature = data.Max(c => c.GetFeature());
-        MinTarget = data.Min(c => c.GetTarget());
-        MaxTarget = data.Max(c => c.GetTarget());
+        if (data.Count == 0)
+        throw new InvalidOperationException("Cannot normalize empty dataset");
 
+        MinFeature = data.Min(s => s.Feature);
+        MaxFeature = data.Max(s => s.Feature);
+        MinTarget = data.Min(s => s.Target);
+        MaxTarget = data.Max(s => s.Target);
 
-        foreach (var item in data)
+        var normalizedData = data.Select(sample => new Sample
         {
-            double normFeature = (item.GetFeature() - MinFeature) / (MaxFeature - MinFeature);
-            double normTarget = (item.GetTarget() - MinTarget) / (MaxTarget - MinTarget);
-            
-            item.SetFeature(normFeature);
-            item.SetTarget(normTarget);
-        }
+            Feature = (sample.Feature - MinFeature) / (MaxFeature - MinFeature),
+            Target = (sample.Target - MinTarget) / (MaxTarget - MinTarget)
+        }).ToList();
+        
+        return normalizedData;
     }
 
+    /// <summary>
+    /// Converts normalized theta values back to original scale
+    /// </summary>
     public (double theta0, double theta1) Denormalize(double theta0Norm, double theta1Norm)
     {
-        double theta1Original = theta1Norm * (MaxTarget - MinTarget) / (MaxFeature - MinFeature);
-        double theta0Original = MinTarget + theta0Norm * (MaxTarget - MinTarget) - theta1Original * MinFeature;
-        return (theta0Original, theta1Original);
+        double theta1 = theta1Norm * (MaxTarget - MinTarget) / (MaxFeature - MinFeature);
+        double theta0 = MinTarget + theta0Norm * (MaxTarget - MinTarget) - theta1 * MinFeature;
+        
+        return (theta0, theta1);
     }
 }

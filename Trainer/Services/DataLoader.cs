@@ -8,6 +8,11 @@ namespace Trainer.Services;
 
 public static class DataLoader
 {
+    /// <summary>
+    /// Loads samples from a CSV file based on the provided configuration
+    /// </summary>
+    /// <param name="config">Data source configuration</param>
+    /// <returns>List of loaded samples</returns>
     public static List<Sample> LoadFromCsv(DataSourceConfig config)
     {
 
