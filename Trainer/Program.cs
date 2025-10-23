@@ -1,35 +1,78 @@
-﻿using Trainer.Services;
+﻿using CommandLine;
+using Trainer.Configuration;
+using Trainer.Models;
+using Trainer.Services;
 using Trainer.Utils;
 
-Console.WriteLine("=== Linear Regression Trainer ===\n");
+namespace Trainer;
 
-var data = DataLoader.LoadFromCsv("../data.csv");
-var originalData = data.Select(c => new CarData { km = c.km, price = c.price }).ToList();
-Console.WriteLine($"{data.Count} cars loaded\n");
-
-var normalizer = new DataNormalizer();
-try
+class Program
 {
-    normalizer.Normalize(data);
+    static void Main(string[] args)
+    {
+        Parser.Default.ParseArguments<Options>(args)
+            .WithParsed(Run)
+            .WithNotParsed(HandleErrors);
+    }
+
+    private static void Run(Options options)
+    {
+        Console.WriteLine("=== Linear Regression Trainer ===\n");
+
+        var dataConfig = ConfigFactory.FromCliOptions(options);
+        var trainingConfig = ConfigFactory.CreateTrainingConfig(options);
+        var graphConfig = ConfigFactory.CreateGraphConfig(options);
+
+        var data = new List<Sample>();
+        try
+        {
+            data = DataLoader.LoadFromCsv(dataConfig);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine($"Error: {e.Message}");
+            Environment.Exit(1);
+            return;
+        }
+
+        Console.WriteLine($"{data.Count} items loaded\n");
+        Console.WriteLine($"Original data: {string.Join(", ", data.Take(5).Select(d => $"({d.Feature}, {d.Target})"))} ...\n");
+        
+        var normalizer = new DataNormalizer();
+        var normalizedData = new List<Sample>();
+        try
+        {
+            normalizedData = normalizer.Normalize(data);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine($"Error: {e.Message}");
+        }
+        Console.WriteLine("Normalized data\n");
+
+        Console.WriteLine("Training in progress ...\n");
+        var trainer = new LinearRegressionTrainer(trainingConfig);
+        trainer.Train(normalizedData);
+
+        var (theta0, theta1) = normalizer.Denormalize(trainer.Theta0, trainer.Theta1);
+
+        Console.WriteLine($"\nTraining done. Model parameters:");
+        Console.WriteLine($"θ0 = {theta0:F6}");
+        Console.WriteLine($"θ1 = {theta1:F6}\n");
+
+        ModelSaver.Save(options.ModelPath, theta0, theta1);
+        Console.WriteLine($"Model saved to {Path.GetFullPath(options.ModelPath)}\n");
+
+        if (options.GeneratePlot)
+        {
+            Graph.Generate(data, theta0, theta1, graphConfig, options.PlotPath);
+            Console.WriteLine($"Plot saved to {Path.GetFullPath(options.PlotPath)}\n");
+        }
+    }
+
+    private static void HandleErrors(IEnumerable<Error> enumerable)
+    {
+        Console.WriteLine("Invalid arguments. Use --help for usage information.");
+        Environment.Exit(1);
+    }
 }
-catch (Exception e)
-{
-    Console.WriteLine($"Error: {e.Message}");
-}
-finally
-{
-    Console.WriteLine("Normalized data\n");
-}
-
-Console.WriteLine("Training in progress ...\n");
-var trainer = new LinearRegressionTrainer(learningRate: 0.01, iterations: 100000);
-trainer.Train(data);
-
-var (theta0, theta1) = normalizer.Denormalize(trainer.Theta0, trainer.Theta1);
-
-
-Graph.PlotResults(originalData, theta0, theta1, userKm: 150000);
-
-Console.WriteLine("\nTraining done\n");
-
-ModelSaver.Save("../model.txt", theta0, theta1);

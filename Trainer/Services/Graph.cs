@@ -1,54 +1,68 @@
 using ScottPlot;
+using Trainer.Models;
+using Trainer.Configuration;
 
 namespace Trainer.Services;
 
-public class Graph
+/// <summary>
+/// Generates visualization plots for regression results
+/// </summary>
+public static class Graph
 {
-
-    public static void PlotResults(List<CarData> originalData, double theta0Original, double theta1Original, double? userKm = null)
+    /// <summary>
+    /// Generates a plot with data points and regression line
+    /// </summary>
+    /// <param name="data">Original (non-normalized) data</param>
+    /// <param name="theta0">Intercept parameter</param>
+    /// <param name="theta1">Slope parameter</param>
+    /// <param name="config">Graph configuration</param>
+    /// <param name="outputPath">Path to save the plot</param>
+    /// <param name="userFeature">Optional user input to highlight on the plot</param>
+    public static void Generate(List<Sample> data, double theta0, double theta1, 
+                               GraphConfig config, string outputPath, 
+                               double? userFeature = null)
     {
         var plt = new Plot();
         
-        double[] kms = originalData.Select(c => c.km).ToArray();
-        double[] prices = originalData.Select(c => c.price).ToArray();
+        double[] features = data.Select(s => s.Feature).ToArray();
+        double[] targets = data.Select(s => s.Target).ToArray();
         
-        var scatter = plt.Add.Scatter(kms, prices);
+        var scatter = plt.Add.Scatter(features, targets);
         scatter.LegendText = "Data Points";
-        scatter.MarkerSize = 10;
+        scatter.MarkerSize = config.MarkerSize;
         scatter.MarkerShape = MarkerShape.FilledCircle;
         scatter.Color = Colors.Blue;
         scatter.LineWidth = 0;
         
-        double minKm = 0;
-        double maxKm = kms.Max() * 1.1;
-        double[] lineX = { minKm, maxKm };
+        double minFeature = 0;
+        double maxFeature = features.Max() * 1.1;
+        double[] lineX = { minFeature, maxFeature };
         double[] lineY = { 
-            theta0Original + theta1Original * minKm,
-            theta0Original + theta1Original * maxKm
+            theta0 + theta1 * minFeature,
+            theta0 + theta1 * maxFeature
         };
         
         var line = plt.Add.Line(lineX[0], lineY[0], lineX[1], lineY[1]);
         line.LegendText = "Regression Line";
-        line.LineWidth = 2;
+        line.LineWidth = config.LineWidth;
         line.Color = Colors.Red;
         
-        if (userKm.HasValue)
+        if (userFeature.HasValue)
         {
-            double userPrice = theta0Original + theta1Original * userKm.Value;
-            var userPoint = plt.Add.Marker(userKm.Value, userPrice);
-            userPoint.MarkerSize = 15;
+            double userTarget = theta0 + theta1 * userFeature.Value;
+            var userPoint = plt.Add.Marker(userFeature.Value, userTarget);
+            userPoint.MarkerSize = config.MarkerSize * 1.5f;
             userPoint.MarkerShape = MarkerShape.FilledCircle;
             userPoint.Color = Colors.Green;
             userPoint.LegendText = "User Input";
         }
         
-        plt.Title("Mileage vs Price with Regression Line");
-        plt.XLabel("Mileage (km)");
-        plt.YLabel("Price (€)");
+        plt.Title(config.Title);
+        plt.XLabel(config.XLabel);
+        plt.YLabel(config.YLabel);
         plt.ShowLegend(Alignment.UpperRight);
         
-        plt.SavePng("../regression_plot.png", 800, 600);
-        Console.WriteLine("\nGenerated graph : regression_plot.png");
+        plt.SavePng(outputPath, config.Width, config.Height);
+        Console.WriteLine($"Graph saved: {outputPath}");
     }
 }
-

@@ -1,33 +1,53 @@
+using Trainer.Models;
+
 namespace Trainer.Services;
 
+/// <summary>
+/// Normalizes data to improve training convergence
+/// </summary>
 public class DataNormalizer
 {
-    public double MinKm { get; private set; }
-    public double MaxKm { get; private set; }
-    public double MinPrice { get; private set; }
-    public double MaxPrice { get; private set; }
+    public double MinFeature { get; private set; }
+    public double MaxFeature { get; private set; }
+    public double MinTarget { get; private set; }
+    public double MaxTarget { get; private set; }
 
-    public void Normalize(List<CarData> data)
+    /// <summary>
+    /// Normalizes all samples to [0, 1] range
+    /// </summary>
+    public List<Sample> Normalize(List<Sample> data)
     {
-        MinKm = data.Min(c => c.km);
-        MaxKm = data.Max(c => c.km);
-        MinPrice = data.Min(c => c.price);
-        MaxPrice = data.Max(c => c.price);
+        if (data.Count == 0)
+        throw new InvalidOperationException("Cannot normalize empty dataset");
 
-        var dx = MaxKm - MinKm;  if (dx == 0) throw new InvalidOperationException("All km are equal.");
-        var dy = MaxPrice - MinPrice; if (dy == 0) throw new InvalidOperationException("All prices are equal.");
+        MinFeature = data.Min(s => s.Feature);
+        MaxFeature = data.Max(s => s.Feature);
+        MinTarget = data.Min(s => s.Target);
+        MaxTarget = data.Max(s => s.Target);
 
-        foreach (var car in data)
+        if (MaxFeature - MinFeature == 0)
+            throw new InvalidOperationException("All feature values are identical. Cannot normalize.");
+        
+        if (MaxTarget - MinTarget == 0)
+            throw new InvalidOperationException("All target values are identical. Cannot normalize.");
+
+        var normalizedData = data.Select(sample => new Sample
         {
-            car.km = (car.km - MinKm) / (MaxKm - MinKm);
-            car.price = (car.price - MinPrice) / (MaxPrice - MinPrice);
-        }
+            Feature = (sample.Feature - MinFeature) / (MaxFeature - MinFeature),
+            Target = (sample.Target - MinTarget) / (MaxTarget - MinTarget)
+        }).ToList();
+        
+        return normalizedData;
     }
 
+    /// <summary>
+    /// Converts normalized theta values back to original scale
+    /// </summary>
     public (double theta0, double theta1) Denormalize(double theta0Norm, double theta1Norm)
     {
-        double theta1Original = theta1Norm * (MaxPrice - MinPrice) / (MaxKm - MinKm);
-        double theta0Original = MinPrice + theta0Norm * (MaxPrice - MinPrice) - theta1Original * MinKm;
-        return (theta0Original, theta1Original);
+        double theta1 = theta1Norm * (MaxTarget - MinTarget) / (MaxFeature - MinFeature);
+        double theta0 = MinTarget + theta0Norm * (MaxTarget - MinTarget) - theta1 * MinFeature;
+        
+        return (theta0, theta1);
     }
 }
