@@ -1,49 +1,69 @@
+using Trainer.Configuration;
+using Trainer.Models;
+
 namespace Trainer.Services;
 
 public class LinearRegressionTrainer
 {
     private double _theta0;
     private double _theta1;
-    private readonly double _learningRate;
-    private readonly int _iterations;
+    private readonly TrainingConfig _config;
 
     public double Theta0 => _theta0;
     public double Theta1 => _theta1;
 
-    public LinearRegressionTrainer(double learningRate = 0.01, int iterations = 1000)
+    public LinearRegressionTrainer(TrainingConfig config)
     {
-        _learningRate = learningRate;
-        _iterations = iterations;
+        _config = config;
         _theta0 = 0;
         _theta1 = 0;
     }
 
-    public void Train(List<CarData> data)
+    /// <summary>
+    /// Trains the linear regression model using gradient descent
+    /// </summary>
+    /// <param name="data">Training data samples</param>
+    public void Train(List<Sample> data)
     {
         int m = data.Count;
 
-        for (int iteration = 0; iteration < _iterations; iteration++)
+        for (int iteration = 0; iteration < _config.Iterations; iteration++)
         {
             double sumErrors = 0;
             double sumErrorsWeighted = 0;
+            double cost = 0;
 
-            foreach (var car in data)
+            foreach (var sample in data)
             {
-                double prediction = _theta0 + (_theta1 * car.km);
-                double error = prediction - car.price;
+                double feature = sample.Feature;
+                double target = sample.Target;
+
+                double prediction = _theta0 + (_theta1 * feature);
+                double error = prediction - target;
                 sumErrors += error;
-                sumErrorsWeighted += error * car.km;
+                sumErrorsWeighted += error * feature;
+
+                if (_config.Verbose)
+                    cost += error * error;
             }
 
-            double tmpTheta0 = _learningRate * (sumErrors / m);
-            double tmpTheta1 = _learningRate * (sumErrorsWeighted / m);
+            double tmpTheta0 = _config.LearningRate * (sumErrors / m);
+            double tmpTheta1 = _config.LearningRate * (sumErrorsWeighted / m);
 
             _theta0 = _theta0 - tmpTheta0;
             _theta1 = _theta1 - tmpTheta1;
 
-            if (iteration % 100 == 0)
+            if (iteration % _config.DisplayEvery == 0)
             {
-                Console.WriteLine($"Iteration {iteration}: θ0={_theta0:F6}, θ1={_theta1:F6}");
+                if (_config.Verbose)
+                {
+                    cost = cost / (2 * m);
+                    Console.WriteLine($"Iteration {iteration}: θ0={_theta0:F6}, θ1={_theta1:F6}, Cost={cost:F6}");
+                }
+                else
+                {
+                    Console.WriteLine($"Iteration {iteration}: θ0={_theta0:F6}, θ1={_theta1:F6}");
+                }
             }
         }
     }
