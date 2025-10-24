@@ -49,4 +49,31 @@ public static class MathUtils
     {
         return value < lowerBound || value > upperBound;
     }
+
+    public static double MeanAbsoluteError(double[] yTrue, double[] yPred)
+    {
+        double sum = 0;
+        for (int i = 0; i < yTrue.Length; i++)
+            sum += Math.Abs(yTrue[i] - yPred[i]);
+        return sum / yTrue.Length;
+    }
+
+    public static double RootMeanSquareError(double[] yTrue, double[] yPred)
+    {
+        double sum = 0;
+        for (int i = 0; i < yTrue.Length; i++)
+        {
+            double diff = yTrue[i] - yPred[i];
+            sum += diff * diff;
+        }
+        return Math.Sqrt(sum / yTrue.Length);
+    }
+
+    public static double R2(double[] yTrue, double[] yPred)
+    {
+        double mean = yTrue.Average();
+        double ssTot = yTrue.Sum(y => Math.Pow(y - mean, 2));
+        double ssRes = yTrue.Zip(yPred, (y, yhat) => Math.Pow(y - yhat, 2)).Sum();
+        return 1 - (ssRes / ssTot);
+    }
 }

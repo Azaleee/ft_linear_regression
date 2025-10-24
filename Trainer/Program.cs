@@ -3,6 +3,7 @@ using Trainer.Configuration;
 using Trainer.Models;
 using Trainer.Services;
 using Trainer.Utils;
+using static Trainer.Utils.ModelSaver;
 
 namespace Trainer;
 
@@ -81,18 +82,20 @@ class Program
         var trainer = new LinearRegressionTrainer(trainingConfig);
         trainer.Train(normalizedData);
 
-        var (theta0, theta1) = normalizer.Denormalize(trainer.Theta0, trainer.Theta1);
+        var model = new ModelSaver.LinRegModel(trainer.Theta0, trainer.Theta1);
+
+        var modelDenorm = normalizer.Denormalize(model);
 
         Console.WriteLine($"\nTraining done. Model parameters:");
-        Console.WriteLine($"θ0 = {theta0:F6}");
-        Console.WriteLine($"θ1 = {theta1:F6}\n");
+        Console.WriteLine($"θ0 = {modelDenorm.Theta0:F6}");
+        Console.WriteLine($"θ1 = {modelDenorm.Theta1:F6}\n");
 
-        ModelSaver.Save(options.ModelPath, theta0, theta1);
+        ModelSaver.Save(options.ModelPath, model);
         Console.WriteLine($"Model saved to {Path.GetFullPath(options.ModelPath)}\n");
 
         if (options.GeneratePlot)
         {
-            Graph.Generate(data, theta0, theta1, graphConfig, options.PlotPath);
+            Graph.Generate(data, modelDenorm.Theta0, modelDenorm.Theta1, graphConfig, options.PlotPath);
             Console.WriteLine($"Plot saved to {Path.GetFullPath(options.PlotPath)}\n");
         }
     }
