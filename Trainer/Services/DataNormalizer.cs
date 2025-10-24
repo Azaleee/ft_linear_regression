@@ -1,4 +1,5 @@
 using Trainer.Models;
+using static Trainer.Utils.ModelSaver;
 
 namespace Trainer.Services;
 
@@ -27,7 +28,7 @@ public class DataNormalizer
 
         if (MaxFeature - MinFeature == 0)
             throw new InvalidOperationException("All feature values are identical. Cannot normalize.");
-        
+
         if (MaxTarget - MinTarget == 0)
             throw new InvalidOperationException("All target values are identical. Cannot normalize.");
 
@@ -36,18 +37,18 @@ public class DataNormalizer
             Feature = (sample.Feature - MinFeature) / (MaxFeature - MinFeature),
             Target = (sample.Target - MinTarget) / (MaxTarget - MinTarget)
         }).ToList();
-        
+
         return normalizedData;
     }
 
     /// <summary>
     /// Converts normalized theta values back to original scale
     /// </summary>
-    public (double theta0, double theta1) Denormalize(double theta0Norm, double theta1Norm)
+    public LinRegModel Denormalize(LinRegModel model)
     {
-        double theta1 = theta1Norm * (MaxTarget - MinTarget) / (MaxFeature - MinFeature);
-        double theta0 = MinTarget + theta0Norm * (MaxTarget - MinTarget) - theta1 * MinFeature;
-        
-        return (theta0, theta1);
+        double theta1 = model.Theta1 * (MaxTarget - MinTarget) / (MaxFeature - MinFeature);
+        double theta0 = MinTarget + model.Theta0 * (MaxTarget - MinTarget) - theta1 * MinFeature;
+
+        return new LinRegModel(theta0, theta1);
     }
 }
