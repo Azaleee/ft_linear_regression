@@ -15,4 +15,8 @@
     <PackageReference Include="ScottPlot" Version="5.1.57" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Core\Core.csproj" />
+  </ItemGroup>
+
 </Project>
