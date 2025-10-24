@@ -37,7 +37,34 @@ class Program
 
         Console.WriteLine($"{data.Count} items loaded\n");
         Console.WriteLine($"Original data: {string.Join(", ", data.Take(5).Select(d => $"({d.Feature}, {d.Target})"))} ...\n");
-        
+
+        if (options.CleanData)
+        {
+            int removed = DataCleaner.RemoveOutliers(
+                data,
+                removeFeatureOutliers: options.CleanFeature,
+                removeTargetOutliers: options.CleanTarget,
+                multiplier: options.IqrMultiplier
+            );
+
+            if (removed > 0)
+            {
+                double percentage = (removed * 100.0) / (data.Count + removed);
+                Console.WriteLine($"Data cleaned: removed {removed} outliers ({percentage:F1}%)\n");
+            }
+            else
+            {
+                Console.WriteLine("Data cleaned: no outliers detected\n");
+            }
+
+            if (data.Count == 0)
+            {
+                Console.WriteLine("Error: All data was removed as outliers!");
+                Environment.Exit(1);
+                return;
+            }
+        }
+
         var normalizer = new DataNormalizer();
         var normalizedData = new List<Sample>();
         try

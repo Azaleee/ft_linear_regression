@@ -52,4 +52,22 @@ public class Options
     [Option('o', "output-plot", Required = false, Default = "regression_plot.png",
             HelpText = "Path to save the plot image")]
     public string PlotPath { get; set; } = "regression_plot.png";
+
+    // === Data Cleaning ===
+
+    [Option("clean", Required = false, Default = false,
+            HelpText = "Remove outliers using IQR method")]
+    public bool CleanData { get; set; } = false;
+
+    [Option("iqr-multiplier", Required = false, Default = 1.5,
+            HelpText = "IQR multiplier for outlier detection (1.5=standard, 3.0=extreme)")]
+    public double IqrMultiplier { get; set; } = 1.5;
+
+    [Option("clean-feature", Required = false, Default = true,
+            HelpText = "Remove outliers based on feature values")]
+    public bool CleanFeature { get; set; } = true;
+
+    [Option("clean-target", Required = false, Default = true,
+            HelpText = "Remove outliers based on target values")]
+    public bool CleanTarget { get; set; } = true;
 }
