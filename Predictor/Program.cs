@@ -16,7 +16,7 @@ class Program
             Console.WriteLine($"Error: {e.Message}");
         }
 
-        Console.WriteLine($"Tetha0 : {model.Theta0} Theta1 : {model.Theta1}");
+        Console.WriteLine($"Theta0 : {model.Theta0} Theta1 : {model.Theta1}");
 
         Console.WriteLine("Enter mileage: ");
         string? input = Console.ReadLine();
